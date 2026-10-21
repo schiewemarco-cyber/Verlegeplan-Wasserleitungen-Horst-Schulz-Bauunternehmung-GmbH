@@ -1,0 +1,23 @@
+Verlegeplan-Editor als App (PWA)
+
+Inhalt: index.html (die App), manifest.webmanifest, sw.js (Offline-Betrieb), vier Symbol-Dateien.
+Alle Dateien müssen im selben Ordner auf dem Server liegen. Die Seite muss über https:// geladen werden.
+
+Kostenlos veröffentlichen, z. B. mit GitHub Pages:
+ 1. Kostenloses Konto auf github.com anlegen.
+ 2. Neues Repository anlegen (z. B. "verlegeplan"), Sichtbarkeit "Public".
+ 3. "Add file" > "Upload files": alle Dateien aus diesem Ordner hochladen, "Commit changes".
+ 4. Settings > Pages > Branch "main", Ordner "/ (root)" > Save.
+ 5. Nach 1-2 Minuten ist die App unter https://BENUTZERNAME.github.io/verlegeplan/ erreichbar.
+
+Installieren:
+ - iPhone/iPad: in Safari öffnen > Teilen > "Zum Home-Bildschirm".
+ - Android: in Chrome öffnen > Menü (drei Punkte) > "App installieren".
+ - PC (Chrome/Edge): Installieren-Symbol in der Adressleiste.
+Einmal mit Netz öffnen, danach läuft die App auch offline.
+
+Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v2, dann v3 usw.).
+Gespeicherte Pläne liegen im Browser des jeweiligen Geräts (Austausch über PDF speichern / PDF laden).
+
+Teilen-Knopf: In der Druckvorschau "Teilen" tippen, dann Ziel wählen (OneDrive, Teams, Mail, "In Dateien sichern" ...).
+Wo Teilen nicht unterstützt wird, speichert die App das PDF stattdessen als Download.
