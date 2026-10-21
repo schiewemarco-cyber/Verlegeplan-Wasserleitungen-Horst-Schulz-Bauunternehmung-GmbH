@@ -45,8 +45,15 @@ svg text{fill:var(--tx);font-family:system-ui,sans-serif}
 @page plan{size:A3 landscape;margin:0}@page lst{size:A4 portrait;margin:0}
 .pg1{page:plan}.pg2{page:lst}
 @media print{.noprint{display:none}body>*:not(#pv){display:none!important}body{background:#fff;padding:0;max-width:none;margin:0}#pv{position:static;display:block!important;background:none;padding:0;overflow:visible}.pvbar{display:none}#pvin{zoom:1!important}.pg{margin:0;box-shadow:none;break-after:page}}
+.top{display:flex;align-items:center;gap:8px;position:relative;margin-bottom:12px}.top h1{margin:0;flex:1}
+.cloudb{padding:6px 8px;line-height:0;color:var(--mu);background:var(--card)}.cloudb.on{color:var(--ac);border-color:var(--ac)}
+.cmenu{display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:60;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;width:min(300px,92vw);box-shadow:0 8px 28px rgba(0,0,0,.28);flex-direction:column;gap:8px}
+.cmenu.open{display:flex}.cmenu select,.cmenu button{width:100%}.cmenu .row button{width:auto;flex:1}
+#cwork{display:none;flex-direction:column;gap:8px}#cmsg{color:var(--ac);font-size:13px}
+.grp{display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center;margin-right:8px}
+.hint{color:var(--mu);font-size:12px;margin-top:6px}
 </style></head><body>
-<h1>Verlegeplan-Editor</h1>
+<div class="top"><h1>Verlegeplan-Editor</h1><span id="cloudslot" class="noprint"></span></div>
 <div class="card noprint">
  <div class="row">
   <label>Bauvorhaben<input id="bv" style="width:170px"></label>
@@ -56,14 +63,13 @@ svg text{fill:var(--tx);font-family:system-ui,sans-serif}
   <label>Hauptleitung (Größe)<span style="display:flex;gap:4px"><select id="unit" onchange="unitCh()" style="width:68px"><option value="DN">DN</option><option value="DA">DA</option></select><input id="dn" type="number" value="150"></span></label>
  </div>
  <div class="row" style="margin-top:8px">
-  <label>Baulängen Rohr (m)<input id="bl" value="6; 12" style="width:100px" title="Standard-Baulängen, getrennt mit Semikolon. Jede andere Rohrlänge gilt als Schnitt."></label><button class="p" onclick="save()">💾 Speichern</button>
-  <select id="sv" onchange="loadSel()" style="max-width:200px"></select><button onclick="delSel()" title="Gewählten Plan löschen">🗑</button><span id="msg" style="color:var(--ac)"></span><span style="color:var(--mu);font-size:12px">Automatische Sicherung aktiv</span>
-  <button onclick="demo()">Beispiel laden</button>
-  <button onclick="S.items=[];S.act=[];S.sel=null;S.ins=null;S.bo={};S.bx=[];draw()">Leeren</button>
-  <button onclick="undo()" title="Strg+Z">↶ Rückgängig</button><button onclick="redo()" title="Strg+Y">↷ Wiederholen</button>
-  <button class="p" onclick="preview()">Druckvorschau</button>
-  <button onclick="$('pdfin').click()">📂 PDF laden</button><input type="file" id="pdfin" accept="application/pdf,.pdf" style="display:none" onchange="pdfLoad(this)">
- </div>
+   <label>Baulängen Rohr (m)<input id="bl" value="6; 12" style="width:100px" title="Standard-Baulängen, getrennt mit Semikolon. Jede andere Rohrlänge gilt als Schnitt."></label>
+   <span class="grp"><button class="p" onclick="save()">💾 Speichern</button><select id="sv" onchange="loadSel()" style="max-width:200px"></select><button onclick="delSel()" title="Gewählten Plan löschen">🗑</button></span>
+   <span class="grp"><button onclick="undo()" title="Strg+Z">↶ Rückgängig</button><button onclick="redo()" title="Strg+Y">↷ Wiederholen</button><button onclick="clearAll()">Leeren</button></span>
+   <span class="grp"><button class="p" onclick="preview()">Druckvorschau</button><button onclick="$('pdfin').click()">📂 PDF laden</button><input type="file" id="pdfin" accept="application/pdf,.pdf" style="display:none" onchange="pdfLoad(this)"></span>
+   <span id="msg" style="color:var(--ac)"></span>
+  </div>
+  <div class="hint">Änderungen werden automatisch auf diesem Gerät gesichert.</div>
 </div>
 <div class="card noprint stick">
  <h2>Element anfügen an: <span id="cur" style="color:var(--ac)"></span></h2>
@@ -114,10 +120,6 @@ function add(){var t=$('type').value,o={t:t};
  if(t=='ffr'){o.bdn=+$('fdn').value||100;if($('eun').value!=$('unit').value)o.u=$('eun').value}
  var l=$('lbl').value.trim();if(l)o.lbl=l;$('lbl').value='';
  put(o);FOLLOW=true;draw()}
-function demo(){S.act=[];S.sel=null;S.ins=null;S.bo={};S.bx=[];S.items=[{t:'anb'},{t:'rohr',len:12},{t:'rohr',len:12},{t:'kos'},
- {t:'tee',dir:-1,bn:'Kuckucksweg',bdn:80,sub:[{t:'kos'},{t:'rohr',len:6},{t:'anb'}]},{t:'rohr',len:12},{t:'rohr',len:12},{t:'hydt'},{t:'kos'},
- {t:'tee',dir:1,bn:'Finkenweg',bdn:100,sub:[{t:'kos'},{t:'rohr',len:4.5},{t:'eu'}]},{t:'rohr',len:8.3},{t:'eu'}];
- $('bv').value='Vallendar, Jahnstraße';$('str').value='Jahnstraße';$('ks').value='';$('zr').value='';$('dn').value=150;draw()}
 var AN=0,U='DN';
 function gl(P){var l=S.items;if(P!=='')P.split(',').forEach(function(i){var it=l[+i];it.sub=it.sub||[];l=it.sub});return l}
 function mv(P,i,d){var a=gl(P),j=i+d;if(j<0||j>=a.length)return;var x=a[i];a[i]=a[j];a[j]=x;S.act=[];S.sel=null;S.ins=null;draw()}
@@ -200,6 +202,7 @@ function pwalk(e){var a=e.a,n=e.n,o='';
  else return '';
  return o+(st&&fl?'B':fl?'f':'S')+' Q\n'}
 var BR=[],BH=0,SK=.7,ZM=1,AT=0;
+function clearAll(){if(S.items.length&&!confirm('Den ganzen Plan leeren?'))return;S.items=[];S.act=[];S.sel=null;S.ins=null;S.bo={};S.bx=[];draw()}
 function autoSave(){try{localStorage.setItem('vpauto',state())}catch(e){}}
 function autoLoad(){try{var t=localStorage.getItem('vpauto');if(!t)return false;applyState(JSON.parse(t));return true}catch(e){return false}}
 window.addEventListener('pagehide',function(){clearTimeout(AT);autoSave()});document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(AT);autoSave()}});
@@ -385,7 +388,7 @@ function draw(){
   if(t=='anb')s='Anbindung A'+(++ac);
   if(t=='dir')s='Richtung '+Math.round(it.a*10)/10+'°';
   return '<li>'+(tee&&P2==act?'<b>'+s+'</b>':s)+(t=='dir'?'':' <input placeholder="Bezeichnung" value="'+esc(it.lbl||'')+'" oninput="setLblLive(\''+P+'\','+i+',this.value)" onblur="LASTCO=false" style="width:130px;padding:2px 6px;font-size:13px">')+' <button onclick="mv(\''+P+'\','+i+',-1)">↑</button><button onclick="mv(\''+P+'\','+i+',1)">↓</button><button onclick="rm(\''+P+'\','+i+')">✕</button>'+(tee?'<button onclick="pick(\''+P2+'\')" title="Hier weiterbauen">⊕</button>':'')+(has?'<ol>'+lst(it.sub,path.concat(i))+'</ol>':'')+'</li>'}).join('')}
- if(!KEEP)$('ls').innerHTML=lst(S.items,[])||'<li style="list-style:none;color:var(--mu)">Noch leer – „Beispiel laden“ oder Elemente hinzufügen.</li>';
+ if(!KEEP)$('ls').innerHTML=lst(S.items,[])||'<li style="list-style:none;color:var(--mu)">Noch leer – unten ein Element hinzufügen.</li>';
  BM=bom;$('bom').innerHTML=bomHtml(1);clearTimeout(AT);AT=setTimeout(autoSave,400);
 }
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}

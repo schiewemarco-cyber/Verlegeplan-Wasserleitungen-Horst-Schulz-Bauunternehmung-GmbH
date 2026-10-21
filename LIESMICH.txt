@@ -16,7 +16,7 @@ Installieren:
  - PC (Chrome/Edge): Installieren-Symbol in der Adressleiste.
 Einmal mit Netz öffnen, danach läuft die App auch offline.
 
-Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v5, dann v6 usw.).
+Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v6, dann v7 usw.).
 Gespeicherte Pläne liegen im Browser des jeweiligen Geräts (Austausch über PDF speichern / PDF laden).
 
 Teilen-Knopf: In der Druckvorschau "Teilen" tippen, dann Ziel wählen (OneDrive, Teams, Mail, "In Dateien sichern" ...).

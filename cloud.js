@@ -21,7 +21,7 @@
   function when(m) { return new Date(m.lastModifiedDateTime).toLocaleString('de-DE'); }
   function say(t) {
     var m = $('cmsg'); if (!m) return;
-    m.textContent = t; clearTimeout(say.t);
+    m.textContent = t; if (typeof msg === 'function') msg(t); clearTimeout(say.t);
     say.t = setTimeout(function () { m.textContent = ''; }, 7000);
   }
   function err(e) {
@@ -143,7 +143,7 @@
       })
       .then(function (go) { if (!go) throw { cancel: 1 }; return gr('PUT', B + '/' + enc(name) + ':/content', JSON.stringify(d)); })
       .then(ok).then(json)
-      .then(function (j) { CE[name] = j.eTag; say('In Cloud gespeichert ✓'); return refresh().then(function () { $('cls').value = name; }); })
+      .then(function (j) { CE[name] = j.eTag; say('In Cloud gespeichert ✓'); toggle(false); return refresh().then(function () { $('cls').value = name; }); })
       .catch(function (e) { if (!e || !e.cancel) say(err(e)); });
   }
 
@@ -155,7 +155,7 @@
       .then(ok).then(json)
       .then(function (m) { et = m.eTag; return gr('GET', B + '/' + enc(name) + ':/content'); })
       .then(ok).then(json)
-      .then(function (d) { applyState(d); CE[name] = et; say('Plan geöffnet ✓'); })
+      .then(function (d) { applyState(d); CE[name] = et; say('Plan geöffnet ✓'); toggle(false); })
       .catch(function (e) { say(err(e)); });
   }
 
@@ -167,23 +167,33 @@
       .catch(function (e) { say(err(e)); });
   }
 
+  var CLOUD_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>';
+  function toggle(open) {
+    var p = $('cpan'); if (!p) return;
+    p.classList.toggle('open', open === undefined ? !p.classList.contains('open') : open);
+  }
   function ui() {
-    $('cst').textContent = acct ? '☁ ' + (acct.name || acct.username) : '☁ Cloud: nicht angemeldet';
-    ['cout', 'csv', 'cls', 'cld', 'cdel', 'crf'].forEach(function (i) { $(i).style.display = acct ? '' : 'none'; });
-    $('cin').style.display = acct ? 'none' : '';
+    var on = !!acct, nm = on ? (acct.name || acct.username) : '';
+    $('cbtn').classList.toggle('on', on);
+    $('cbtn').title = on ? 'Cloud: angemeldet als ' + nm : 'Cloud: nicht angemeldet';
+    $('cst').textContent = on ? 'Angemeldet als ' + nm : 'Nicht angemeldet';
+    $('cin').style.display = on ? 'none' : '';
+    $('cwork').style.display = on ? 'flex' : 'none';
   }
 
-  var host = $('sv') && $('sv').parentNode;
-  if (!host) return;
-  var row = document.createElement('div');
-  row.className = 'row noprint'; row.style.marginTop = '8px'; row.style.alignItems = 'center';
-  row.innerHTML = '<span id="cst" style="color:var(--mu)"></span>' +
-    '<button id="cin" class="p">☁ Anmelden</button><button id="cout">Abmelden</button>' +
-    '<button id="csv" class="p">☁ In Cloud speichern</button>' +
-    '<select id="cls" style="max-width:260px"><option value="">Cloud-Pläne…</option></select>' +
-    '<button id="cld">Öffnen</button><button id="cdel" title="Plan in der Cloud löschen">🗑</button><button id="crf" title="Liste aktualisieren">↻</button>' +
-    '<span id="cmsg" style="color:var(--ac)"></span>';
-  host.parentNode.insertBefore(row, host.nextSibling);
+  var slot = $('cloudslot');
+  if (!slot) return;
+  slot.innerHTML = '<button id="cbtn" class="cloudb" title="Cloud">' + CLOUD_SVG + '</button>' +
+    '<div id="cpan" class="cmenu"><b id="cst"></b>' +
+    '<button id="cin" class="p">Mit Firmenkonto anmelden</button>' +
+    '<div id="cwork"><button id="csv" class="p">In Cloud speichern</button>' +
+    '<select id="cls"><option value="">Cloud-Pläne…</option></select>' +
+    '<div class="row"><button id="cld">Öffnen</button><button id="cdel" title="Plan in der Cloud löschen">🗑 Löschen</button><button id="crf" title="Liste aktualisieren">↻</button></div>' +
+    '<button id="cout">Abmelden</button></div><span id="cmsg"></span></div>';
+  $('cbtn').onclick = function () { toggle(); if (acct && $('cpan').classList.contains('open')) refresh(); };
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (t && t.closest && !t.closest('#cpan') && !t.closest('#cbtn')) toggle(false);
+  });
   $('cin').onclick = login; $('cout').onclick = logout; $('csv').onclick = cSave;
   $('cld').onclick = cOpen; $('cdel').onclick = cDel; $('crf').onclick = refresh;
   ui();
