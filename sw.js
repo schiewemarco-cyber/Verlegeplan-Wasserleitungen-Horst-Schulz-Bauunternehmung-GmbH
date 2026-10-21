@@ -1,6 +1,6 @@
 // Bei jeder Änderung an index.html die Versionsnummer erhöhen (v1 -> v2 ...),
 // dann laden Geräte die neue Fassung beim nächsten Start mit Netz.
-const CACHE = 'verlegeplan-v2';
+const CACHE = 'verlegeplan-v3';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

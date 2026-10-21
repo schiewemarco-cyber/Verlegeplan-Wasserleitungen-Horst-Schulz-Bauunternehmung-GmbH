@@ -57,7 +57,7 @@ svg text{fill:var(--tx);font-family:system-ui,sans-serif}
  </div>
  <div class="row" style="margin-top:8px">
   <label>Baulängen Rohr (m)<input id="bl" value="6; 12" style="width:100px" title="Standard-Baulängen, getrennt mit Semikolon. Jede andere Rohrlänge gilt als Schnitt."></label><button class="p" onclick="save()">💾 Speichern</button>
-  <select id="sv" onchange="loadSel()" style="max-width:200px"></select><button onclick="delSel()" title="Gewählten Plan löschen">🗑</button><span id="msg" style="color:var(--ac)"></span>
+  <select id="sv" onchange="loadSel()" style="max-width:200px"></select><button onclick="delSel()" title="Gewählten Plan löschen">🗑</button><span id="msg" style="color:var(--ac)"></span><span style="color:var(--mu);font-size:12px">Automatische Sicherung aktiv</span>
   <button onclick="demo()">Beispiel laden</button>
   <button onclick="S.items=[];S.act=[];S.sel=null;S.ins=null;S.bo={};S.bx=[];draw()">Leeren</button>
   <button onclick="undo()" title="Strg+Z">↶ Rückgängig</button><button onclick="redo()" title="Strg+Y">↷ Wiederholen</button>
@@ -199,7 +199,10 @@ function pwalk(e){var a=e.a,n=e.n,o='';
  else if(n=='path'){var t=(a.d||'').match(/[MLZ]|-?[\d.]+(?:e-?\d+)?/g)||[],q=[],bx0=1e9,bx1=-1e9,by0=1e9,by1=-1e9;for(var i=0;i<t.length;i++){if(t[i]=='M'||t[i]=='L'){var px=+t[i+1],py=+t[i+2];q.push([t[i],px,py]);bx0=Math.min(bx0,px);bx1=Math.max(bx1,px);by0=Math.min(by0,py);by1=Math.max(by1,py);i+=2}else if(t[i]=='Z')q.push(['Z'])}var kk=(bx1-bx0<40&&by1-by0<40)?SK:1,mx=(bx0+bx1)/2,my=(by0+by1)/2;q.forEach(function(s){if(s[0]=='Z')o+='h ';else o+=(mx+(s[1]-mx)*kk)+' '+(my+(s[2]-my)*kk)+(s[0]=='M'?' m ':' l ')})}
  else return '';
  return o+(st&&fl?'B':fl?'f':'S')+' Q\n'}
-var BR=[],BH=0,SK=.7,ZM=1;
+var BR=[],BH=0,SK=.7,ZM=1,AT=0;
+function autoSave(){try{localStorage.setItem('vpauto',state())}catch(e){}}
+function autoLoad(){try{var t=localStorage.getItem('vpauto');if(!t)return false;applyState(JSON.parse(t));return true}catch(e){return false}}
+window.addEventListener('pagehide',function(){clearTimeout(AT);autoSave()});document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(AT);autoSave()}});
 $('sk').addEventListener('click',function(e){var t=e.target;if(t===this||(t.tagName&&t.tagName.toLowerCase()=='svg')){S.sel=null;S.ins=null;S.cut=false;S.free=false;S.pts=false;draw()}});
 function stdLens(){return ($('bl').value||'').split(/[;\s]+/).map(num).filter(function(v){return v>0})}
 function isCut(it){if(!it||it.t!='rohr')return false;var a=stdLens();return a.length>0&&!a.some(function(v){return Math.abs(v-it.len)<0.005})}
@@ -383,11 +386,11 @@ function draw(){
   if(t=='dir')s='Richtung '+Math.round(it.a*10)/10+'°';
   return '<li>'+(tee&&P2==act?'<b>'+s+'</b>':s)+(t=='dir'?'':' <input placeholder="Bezeichnung" value="'+esc(it.lbl||'')+'" oninput="setLblLive(\''+P+'\','+i+',this.value)" onblur="LASTCO=false" style="width:130px;padding:2px 6px;font-size:13px">')+' <button onclick="mv(\''+P+'\','+i+',-1)">↑</button><button onclick="mv(\''+P+'\','+i+',1)">↓</button><button onclick="rm(\''+P+'\','+i+')">✕</button>'+(tee?'<button onclick="pick(\''+P2+'\')" title="Hier weiterbauen">⊕</button>':'')+(has?'<ol>'+lst(it.sub,path.concat(i))+'</ol>':'')+'</li>'}).join('')}
  if(!KEEP)$('ls').innerHTML=lst(S.items,[])||'<li style="list-style:none;color:var(--mu)">Noch leer – „Beispiel laden“ oder Elemente hinzufügen.</li>';
- BM=bom;$('bom').innerHTML=bomHtml(1);
+ BM=bom;$('bom').innerHTML=bomHtml(1);clearTimeout(AT);AT=setTimeout(autoSave,400);
 }
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var AR=[['→',0],['↘',45],['↓',90],['↙',135],['←',180],['↖',-135],['↑',-90],['↗',-45]];
 $('arr').innerHTML=AR.map(function(a){return '<button onclick="setDir('+a[1]+')" title="Richtung '+a[1]+'°">'+a[0]+'</button>'}).join('');
 document.addEventListener('keydown',function(e){var g=e.target&&e.target.tagName,k=(e.key||'').toLowerCase();if((e.ctrlKey||e.metaKey)&&g!='INPUT'&&g!='TEXTAREA'){if(k=='z'&&!e.shiftKey){e.preventDefault();undo();return}if(k=='y'||(k=='z'&&e.shiftKey)){e.preventDefault();redo();return}}if((e.key=='Delete'||e.key=='Backspace')&&S.sel&&g!='INPUT'&&g!='SELECT'&&g!='TEXTAREA'){e.preventDefault();selDel()}});
-['bv','str','ks','zr','dn','bl'].forEach(function(i){$(i).oninput=draw});fields();svList();demo();
+['bv','str','ks','zr','dn','bl'].forEach(function(i){$(i).oninput=draw});fields();svList();if(!autoLoad()){S.items=[];draw()}
 </script><div id="pv"><div class="pvbar"><button class="p" onclick="pdfSave()">⬇ PDF speichern</button><button class="p" onclick="pdfShare()">📤 Teilen</button><button onclick="window.print()">🖨 Drucken</button><span id="pvm" style="color:#fc6"></span><button onclick="pvClose()">Schließen</button><span>Seite 1: Plan A3 quer · Seite 2: Stückliste A4 hoch</span></div><div id="pvin"></div></div><script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script></body></html>
