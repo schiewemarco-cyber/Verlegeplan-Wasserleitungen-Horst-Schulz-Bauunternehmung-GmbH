@@ -78,10 +78,11 @@
       throw e;
     });
   }
-  function gr(method, path, body) {
+  function gr(method, path, body, hdr) {
     return token().then(function (t) {
       var h = { Authorization: 'Bearer ' + t };
       if (body !== undefined) h['Content-Type'] = 'application/json';
+      if (hdr) Object.keys(hdr).forEach(function (k) { h[k] = hdr[k]; });
       return fetch(G + path, { method: method, headers: h, body: body });
     });
   }
@@ -110,27 +111,61 @@
   }
   function label(name) { return name.slice(0, -EXT.length); }
 
+  var CL = [], IDXN = '_index.json';
+  function idxRead() {
+    return base().then(function (B) {
+      return gr('GET', B + '/' + IDXN + '?$select=eTag').then(function (r) {
+        if (r.status === 404) return { et: null, d: { v: 1, plans: {} } };
+        return ok(r).then(json).then(function (m) {
+          return gr('GET', B + '/' + IDXN + ':/content').then(ok).then(json).then(function (d) {
+            return { et: m.eTag, d: (d && d.plans) ? d : { v: 1, plans: {} } };
+          });
+        });
+      });
+    });
+  }
+  function idxUpdate(fn) {
+    function once() {
+      return idxRead().then(function (x) {
+        fn(x.d.plans);
+        return base().then(function (B) {
+          return gr('PUT', B + '/' + IDXN + ':/content', JSON.stringify(x.d), x.et ? { 'If-Match': x.et } : null);
+        });
+      }).then(function (r) { if (r.status === 412) throw { retry: 1 }; return ok(r); });
+    }
+    return once().catch(function (e) { if (e && e.retry) return once(); throw e; }).catch(function () {});
+  }
+  function renderCloud(sel) {
+    var q = ($('cq').value || '').toLowerCase().trim(), st = $('cfs').value, cur = sel || $('cls').value, o = '', n = 0;
+    CL.forEach(function (f) {
+      var m = f.m, txt = [label(f.name), m.str, m.ks, m.zr, m.st, f.by].join(' ').toLowerCase();
+      if (q && txt.indexOf(q) < 0) return;
+      if (st && m.st !== st) return;
+      n++;
+      o += '<option value="' + esc(f.name) + '">' + esc(label(f.name)) + (m.str && m.str !== label(f.name) ? ' · ' + esc(m.str) : '') +
+        (m.st ? ' · ' + esc(m.st) : '') + ' · ' + new Date(f.t).toLocaleDateString('de-DE') + (f.by && f.by !== '?' ? ' · ' + esc(f.by) : '') + '</option>';
+    });
+    $('cls').innerHTML = o; $('cls').value = cur; $('ccnt').textContent = n + ' von ' + CL.length + ' Plänen';
+  }
   function refresh() {
     if (!acct) return Promise.resolve();
     return base().then(function (B) {
       return gr('GET', B + ':/children?$select=name,eTag,lastModifiedDateTime,lastModifiedBy&$top=200');
     }).then(function (r) { return r.status === 404 ? { value: [] } : ok(r).then(json); })
       .then(function (j) {
-        var L = (j.value || []).filter(function (f) { return f.name && f.name.slice(-EXT.length) === EXT; })
-          .sort(function (a, b) { return a.lastModifiedDateTime < b.lastModifiedDateTime ? 1 : -1; });
-        var cur = $('cls').value, o = '<option value="">Cloud-Pläne (' + L.length + ')…</option>';
-        L.forEach(function (f) {
-          o += '<option value="' + esc(f.name) + '">' + esc(label(f.name)) + ' · ' + new Date(f.lastModifiedDateTime).toLocaleDateString('de-DE') +
-            (who(f) !== '?' ? ' · ' + esc(who(f)) : '') + '</option>';
+        return idxRead().catch(function () { return { d: { plans: {} } }; }).then(function (x) {
+          CL = (j.value || []).filter(function (f) { return f.name && f.name.slice(-EXT.length) === EXT; })
+            .sort(function (a, b) { return a.lastModifiedDateTime < b.lastModifiedDateTime ? 1 : -1; })
+            .map(function (f) { return { name: f.name, t: f.lastModifiedDateTime, by: who(f), m: x.d.plans[f.name] || {} }; });
+          renderCloud();
         });
-        $('cls').innerHTML = o; $('cls').value = cur;
       }).catch(function (e) { say(err(e)); });
   }
 
   function cSave() {
     if (!acct) return;
     if (!navigator.onLine) { say('Offline – Cloud nicht erreichbar'); return; }
-    var name = fname(), B, d = JSON.parse(state());
+    var name = fname(), B, ss = state(), d = JSON.parse(ss);
     d.v = 1; d.savedBy = acct.name || acct.username || ''; d.savedAt = new Date().toISOString();
     base().then(function (b) { B = b; return gr('GET', B + '/' + enc(name) + '?$select=eTag,lastModifiedDateTime,lastModifiedBy'); })
       .then(function (r) {
@@ -143,7 +178,7 @@
       })
       .then(function (go) { if (!go) throw { cancel: 1 }; return gr('PUT', B + '/' + enc(name) + ':/content', JSON.stringify(d)); })
       .then(ok).then(json)
-      .then(function (j) { CE[name] = j.eTag; say('In Cloud gespeichert ✓'); toggle(false); return refresh().then(function () { $('cls').value = name; }); })
+      .then(function (j) { CE[name] = j.eTag; if (window.markSaved) markSaved(ss); say('In Cloud gespeichert ✓'); toggle(false); return idxUpdate(function (p) { p[name] = { bv: d.bv || '', str: d.str || '', ks: d.ks || '', zr: d.zr || '', st: d.st || '', by: acct.name || acct.username || '' }; }).then(refresh).then(function () { renderCloud(name); }); })
       .catch(function (e) { if (!e || !e.cancel) say(err(e)); });
   }
 
@@ -155,7 +190,7 @@
       .then(ok).then(json)
       .then(function (m) { et = m.eTag; return gr('GET', B + '/' + enc(name) + ':/content'); })
       .then(ok).then(json)
-      .then(function (d) { applyState(d); CE[name] = et; say('Plan geöffnet ✓'); toggle(false); })
+      .then(function (d) { applyState(d); CE[name] = et; if (window.markSaved) markSaved(state()); say('Plan geöffnet ✓'); toggle(false); })
       .catch(function (e) { say(err(e)); });
   }
 
@@ -163,7 +198,7 @@
     var name = $('cls').value; if (!name || !acct) return;
     if (!confirm('Plan „' + label(name) + '“ in der Cloud löschen?')) return;
     base().then(function (B) { return gr('DELETE', B + '/' + enc(name)); }).then(ok)
-      .then(function () { delete CE[name]; say('Gelöscht'); return refresh(); })
+      .then(function () { delete CE[name]; say('Gelöscht'); return idxUpdate(function (p) { delete p[name]; }).then(refresh); })
       .catch(function (e) { say(err(e)); });
   }
 
@@ -179,15 +214,25 @@
     $('cst').textContent = on ? 'Angemeldet als ' + nm : 'Nicht angemeldet';
     $('cin').style.display = on ? 'none' : '';
     $('cwork').style.display = on ? 'flex' : 'none';
+    if (window.autoSave) autoSave();
   }
+
+  window.cloudState = function () { return !!acct; };
+  window.cloudDirty = function (d) {
+    var b = $('cbtn'); if (!b) return;
+    var on = !!d && !!acct, t = $('cdt');
+    b.classList.toggle('dirty', on);
+    if (t) t.textContent = on ? '⚠ Änderungen noch nicht in der Cloud gesichert' : '';
+    b.title = !acct ? 'Cloud: nicht angemeldet' : (on ? 'Cloud: angemeldet – Änderungen nicht gesichert' : 'Cloud: angemeldet als ' + (acct.name || acct.username));
+  };
 
   var slot = $('cloudslot');
   if (!slot) return;
   slot.innerHTML = '<button id="cbtn" class="cloudb" title="Cloud">' + CLOUD_SVG + '</button>' +
-    '<div id="cpan" class="cmenu"><b id="cst"></b>' +
+    '<div id="cpan" class="cmenu"><b id="cst"></b><small id="cdt" style="color:#b45f06"></small>' +
     '<button id="cin" class="p">Mit Firmenkonto anmelden</button>' +
     '<div id="cwork"><button id="csv" class="p">In Cloud speichern</button>' +
-    '<select id="cls"><option value="">Cloud-Pläne…</option></select>' +
+    '<input id="cq" type="search" placeholder="Suchen: Name, Straße, Person …"><select id="cfs"><option value="">Alle Status</option><option>In Planung</option><option>In Ausführung</option><option>Gebaut</option><option>Abgenommen</option></select><select id="cls" size="6"></select><small id="ccnt" style="color:var(--mu)"></small>' +
     '<div class="row"><button id="cld">Öffnen</button><button id="cdel" title="Plan in der Cloud löschen">🗑 Löschen</button><button id="crf" title="Liste aktualisieren">↻</button></div>' +
     '<button id="cout">Abmelden</button></div><span id="cmsg"></span></div>';
   $('cbtn').onclick = function () { toggle(); if (acct && $('cpan').classList.contains('open')) refresh(); };
@@ -195,7 +240,8 @@
     var t = e.target; if (t && t.closest && !t.closest('#cpan') && !t.closest('#cbtn')) toggle(false);
   });
   $('cin').onclick = login; $('cout').onclick = logout; $('csv').onclick = cSave;
-  $('cld').onclick = cOpen; $('cdel').onclick = cDel; $('crf').onclick = refresh;
+  $('cld').onclick = cOpen; $('cdel').onclick = cDel; $('crf').onclick = function () { refresh(); };
+  $('cq').oninput = function () { renderCloud(); }; $('cfs').onchange = function () { renderCloud(); };
   ui();
 
   // Rückkehr von der Microsoft-Anmeldung oder früher angemeldet: sofort initialisieren

@@ -1,0 +1,10 @@
+Verlegeplan-Editor
+© 2026 Horst Schulz Bauunternehmung GmbH. Alle Rechte vorbehalten.
+Entwickelt von Marco Schiewe.
+
+Diese Software und alle zugehörigen Dateien (index.html, cloud.js, config.js, sw.js, Symbole, Dokumentation)
+sind urheberrechtlich geschützt. Vervielfältigung, Änderung, Weitergabe, Veröffentlichung oder Nutzung
+durch Dritte ist ohne schriftliche Erlaubnis der Horst Schulz Bauunternehmung GmbH nicht gestattet.
+
+Die Software wird ohne Gewähr bereitgestellt. Mengen, Stücklisten und Prüfhinweise sind vor der
+Ausführung fachlich zu kontrollieren.

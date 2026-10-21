@@ -77,3 +77,6 @@ Bitte prüft vor Produktivbetrieb, ob für diese Version bekannte Sicherheitshin
 
 ## 6. Was die Entwicklung braucht
 Client-ID, Mandanten-ID, gewählte Variante (A1/A2), bei A2 Site-Adresse und Bibliotheksname sowie die endgültige App-Adresse.
+
+## 7. Hinweis: Index-Datei
+Zusätzlich zu den Planen (`*.vplan.json`) legt die App im Planordner die kleine Datei `_index.json` ab (Straße, Kostenstelle, Status je Plan für Suche und Filter). Sie darf nicht gelöscht werden, wird aber bei Verlust beim nächsten Speichern neu aufgebaut. Fotos werden in den Plandateien gespeichert, diese können dadurch einige MB groß werden.

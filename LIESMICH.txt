@@ -16,7 +16,7 @@ Installieren:
  - PC (Chrome/Edge): Installieren-Symbol in der Adressleiste.
 Einmal mit Netz öffnen, danach läuft die App auch offline.
 
-Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v6, dann v7 usw.).
+Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v16, dann v17 usw.).
 Gespeicherte Pläne liegen im Browser des jeweiligen Geräts (Austausch über PDF speichern / PDF laden).
 
 Teilen-Knopf: In der Druckvorschau "Teilen" tippen, dann Ziel wählen (OneDrive, Teams, Mail, "In Dateien sichern" ...).
@@ -27,3 +27,5 @@ Benannte Pläne weiterhin mit "Speichern". Das Beispiel gibt es nur noch über "
 
 Cloud (OneDrive/SharePoint): Anleitung für die IT in IT-Einrichtung.md. Danach clientId usw. in config.js eintragen
 und config.js hochladen. Solange clientId leer ist, bleibt alles wie bisher (nur lokal).
+
+Neu: Prüfhinweise, Notizen/Fotos im PDF, Status und Suche in der Cloud-Planliste (Datei _index.json im Planordner nicht löschen).
