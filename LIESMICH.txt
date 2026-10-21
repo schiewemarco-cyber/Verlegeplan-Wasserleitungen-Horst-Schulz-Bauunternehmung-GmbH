@@ -16,7 +16,7 @@ Installieren:
  - PC (Chrome/Edge): Installieren-Symbol in der Adressleiste.
 Einmal mit Netz öffnen, danach läuft die App auch offline.
 
-Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v3, dann v4 usw.).
+Aktualisieren: neue index.html hochladen und in sw.js die Versionsnummer erhöhen (zuletzt: verlegeplan-v5, dann v6 usw.).
 Gespeicherte Pläne liegen im Browser des jeweiligen Geräts (Austausch über PDF speichern / PDF laden).
 
 Teilen-Knopf: In der Druckvorschau "Teilen" tippen, dann Ziel wählen (OneDrive, Teams, Mail, "In Dateien sichern" ...).
@@ -24,3 +24,6 @@ Wo Teilen nicht unterstützt wird, speichert die App das PDF stattdessen als Dow
 
 Automatische Sicherung: Die App speichert jede Änderung im Browser des Geräts und öffnet beim nächsten Start den letzten Stand.
 Benannte Pläne weiterhin mit "Speichern". Das Beispiel gibt es nur noch über "Beispiel laden".
+
+Cloud (OneDrive/SharePoint): Anleitung für die IT in IT-Einrichtung.md. Danach clientId usw. in config.js eintragen
+und config.js hochladen. Solange clientId leer ist, bleibt alles wie bisher (nur lokal).
