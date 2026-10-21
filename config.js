@@ -5,7 +5,7 @@ window.VP_CLOUD = {
   tenantId: '10af70ff-f844-4dfa-832f-b8f451b23e55',          // Verzeichnis-(Mandanten-)ID; leer = 'organizations' (jedes Firmenkonto)
   mode: 'sharepoint',      // 'onedrive' = eigenes OneDrive der angemeldeten Person
                          // 'sharepoint' = gemeinsame SharePoint-Bibliothek (alle Berechtigten sehen alle Pläne)
-  folder: 'Verlegeplaene',               // Ordner, in dem die Pläne liegen (wird automatisch angelegt)
+  folder: 'Verlegepläne',                // Ordner, in dem die Pläne liegen (wird automatisch angelegt)
   site: { host: 'horstschulzbau.sharepoint.com', path: '/sites/Rohrleitungsbau-Verlegeplne', library: '' },
                          // nur bei mode 'sharepoint': host z. B. 'firma.sharepoint.com',
                          // path z. B. '/sites/Tiefbau', library z. B. 'Dokumente' (leer = Standardbibliothek)
